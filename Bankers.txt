@@ -1,0 +1,64 @@
+import java.util.*;
+
+public class Bankers {
+    int np, nr;
+    int[][] alloc, max, need;
+    int[] avail;
+
+    void read() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter number of processes and resources: ");
+        np = sc.nextInt(); nr = sc.nextInt();
+        alloc = new int[np][nr]; max = new int[np][nr]; need = new int[np][nr]; avail = new int[nr];
+        System.out.println("Enter allocation matrix:");
+        for (int i=0;i<np;i++) for (int j=0;j<nr;j++) alloc[i][j]=sc.nextInt();
+        System.out.println("Enter max matrix:");
+        for (int i=0;i<np;i++) for (int j=0;j<nr;j++) max[i][j]=sc.nextInt();
+        System.out.println("Enter available resources:");
+        for (int j=0;j<nr;j++) avail[j]=sc.nextInt();
+        sc.close();
+    }
+
+    boolean canRun(int i, boolean[] done){
+        for (int j=0;j<nr;j++) if (need[i][j] > avail[j]) return false;
+        return !done[i];
+    }
+
+    void calcNeed(){
+        for (int i=0;i<np;i++) for (int j=0;j<nr;j++) need[i][j] = max[i][j] - alloc[i][j];
+    }
+
+    void isSafe(){
+        read();
+        calcNeed();
+        boolean[] done = new boolean[np];
+        int completed = 0;
+        List<Integer> seq = new ArrayList<>();
+        while (completed < np) {
+            boolean progressed = false;
+            for (int i=0;i<np;i++){
+                if (canRun(i, done)){
+                    // allocate -> run -> release
+                    for (int j=0;j<nr;j++) avail[j] += alloc[i][j];
+                    done[i] = true;
+                    seq.add(i);
+                    completed++;
+                    progressed = true;
+                }
+            }
+            if (!progressed) break;
+        }
+        if (completed==np) {
+            System.out.println("System is in a SAFE state.");
+            System.out.print("Safe sequence: ");
+            for (int p: seq) System.out.print("P"+p + " ");
+            System.out.println();
+        } else {
+            System.out.println("System is NOT in a safe state.");
+        }
+    }
+
+    public static void main(String[] args){
+        new Bankers().isSafe();
+    }
+}
