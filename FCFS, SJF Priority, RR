@@ -1,0 +1,329 @@
+FCFS
+import java.util.*;
+public class FCFS_Swapping {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        // Step 1: Take number of processes
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+        
+        int pid[] = new int[n]; // Process IDs
+        int at[] = new int[n];  // Arrival Times
+        int bt[] = new int[n];  // Burst Times
+        int ct[] = new int[n];  // Completion Times
+        int tat[] = new int[n]; // Turnaround Times
+        int wt[] = new int[n];  // Waiting Times
+        
+        // Step 2: Input process details
+        for (int i = 0; i < n; i++) {
+            pid[i] = i + 1;
+            System.out.print("Enter arrival time for P" + pid[i] + ": ");
+            at[i] = sc.nextInt();
+            System.out.print("Enter burst time for P" + pid[i] + ": ");
+            bt[i] = sc.nextInt();
+        }
+        
+        // Step 3: Sort (swap) processes by Arrival Time
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (at[i] > at[j]) {
+                    // Swap arrival time
+                    int temp = at[i];
+                    at[i] = at[j];
+                    at[j] = temp;
+                    // Swap burst time
+                    temp = bt[i];
+                    bt[i] = bt[j];
+                    bt[j] = temp;
+                    // Swap process ID
+                    temp = pid[i];
+                    pid[i] = pid[j];
+                    pid[j] = temp;
+                }
+            }
+        }
+        
+        // Step 4: Calculate Completion Time (CT)
+        ct[0] = at[0] + bt[0]; // First process
+        for (int i = 1; i < n; i++) {
+            if (at[i] > ct[i - 1]) {
+                // CPU is idle until process arrives
+                ct[i] = at[i] + bt[i];
+            } else {
+                ct[i] = ct[i - 1] + bt[i];
+            }
+        }
+        
+        // Step 5: Calculate Turnaround Time (TAT) and Waiting Time (WT)
+        for (int i = 0; i < n; i++) {
+            tat[i] = ct[i] - at[i];
+            wt[i] = tat[i] - bt[i];
+        }
+        
+        // Step 6: Display results
+        System.out.println("\nPID\tAT\tBT\tCT\tTAT\tWT");
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + pid[i] + "\t" + at[i] + "\t" + bt[i] +
+                               "\t" + ct[i] + "\t" + tat[i] + "\t" + wt[i]);
+        }
+    }
+}
+
+
+
+SJF
+import java.util.*;
+
+class Process {
+    int id, at, bt, ct, tat, wt, rt; 
+    int remainingBt; // remaining burst time
+    boolean isCompleted = false;
+}
+
+public class SJF_Preemptive {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Input number of processes
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+
+        Process[] p = new Process[n];
+
+        // Input arrival and burst time
+        for (int i = 0; i < n; i++) {
+            p[i] = new Process();
+            p[i].id = i + 1;
+            System.out.print("Enter Arrival time of P" + (i + 1) + ": ");
+            p[i].at = sc.nextInt();
+            System.out.print("Enter Burst time of P" + (i + 1) + ": ");
+            p[i].bt = sc.nextInt();
+            p[i].remainingBt = p[i].bt;
+        }
+
+        int time = 0, completed = 0;
+        int sumTAT = 0, sumWT = 0, sumRT = 0;
+
+        while (completed != n) {
+            int idx = -1;
+            int minBT = Integer.MAX_VALUE;
+
+            // Find process with shortest remaining burst time among arrived
+            for (int i = 0; i < n; i++) {
+                if (p[i].at <= time && !p[i].isCompleted && p[i].remainingBt < minBT) {
+                    minBT = p[i].remainingBt;
+                    idx = i;
+                }
+            }
+
+            if (idx != -1) {
+                // First response time
+                if (p[idx].remainingBt == p[idx].bt) {
+                    p[idx].rt = time - p[idx].at;
+                }
+
+                // Execute process for 1 unit
+                p[idx].remainingBt--;
+                time++;
+
+                // If process is finished
+                if (p[idx].remainingBt == 0) {
+                    p[idx].ct = time;
+                    p[idx].tat = p[idx].ct - p[idx].at;
+                    p[idx].wt = p[idx].tat - p[idx].bt;
+
+                    sumTAT += p[idx].tat;
+                    sumWT += p[idx].wt;
+                    sumRT += p[idx].rt;
+
+                    p[idx].isCompleted = true;
+                    completed++;
+                }
+            } else {
+                // If no process has arrived yet
+                time++;
+            }
+        }
+
+        // Print results
+        System.out.println("\nPID\tAT\tBT\tCT\tTAT\tWT\tRT");
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + p[i].id + "\t" + p[i].at + "\t" + p[i].bt + "\t" +
+                    p[i].ct + "\t" + p[i].tat + "\t" + p[i].wt + "\t" + p[i].rt);
+        }
+
+        System.out.println("\nAverage TAT: " + (sumTAT / (float) n));
+        System.out.println("Average WT: " + (sumWT / (float) n));
+        System.out.println("Average RT: " + (sumRT / (float) n));
+    }
+}
+
+
+
+
+RR
+import java.util.*;
+
+class Process {
+    int id;   // Process ID (1..n)
+    int at;   // Arrival Time
+    int bt;   // Burst Time (total CPU time required)
+    int rt;   // Remaining Time
+    int ct;   // Completion Time
+    int tat;  // Turnaround Time
+    int wt;   // Waiting Time
+
+    Process(int id, int at, int bt) {
+        this.id = id;
+        this.at = at;
+        this.bt = bt;
+        this.rt = bt; // remaining time initially = burst time
+    }
+}
+
+public class RoundRobinEasy {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Number of processes (enter in arrival order): ");
+        int n = sc.nextInt();
+
+        System.out.print("Time quantum: ");
+        int tq = sc.nextInt();
+
+        // Read processes
+        Process[] p = new Process[n];
+        for (int i = 0; i < n; i++) {
+            System.out.print("Arrival time of P" + (i + 1) + ": ");
+            int at = sc.nextInt();
+            System.out.print("Burst time of P" + (i + 1) + ": ");
+            int bt = sc.nextInt();
+            p[i] = new Process(i + 1, at, bt);
+        }
+
+        // Ready queue holds indices of process array (0..n-1)
+        Queue<Integer> q = new LinkedList<>();
+
+        // Start time from first process arrival
+        int time = p[0].at;
+        int next = 0;               
+        double sumTAT = 0, sumWT = 0;
+        int finished = 0;
+
+        // Add processes which have already arrived at the start time
+        while (next < n && p[next].at <= time) {
+            q.add(next++);
+        }
+
+        // Main scheduling loop
+        while (finished < n) {
+            // If ready queue empty, jump to next arrival
+            if (q.isEmpty()) {
+                time = p[next].at;
+                q.add(next++);
+            }
+
+            int idx = q.poll();     
+            Process cur = p[idx];
+
+            // Run for time quantum or remaining time, whichever is smaller
+            int run = Math.min(tq, cur.rt);
+            cur.rt -= run;
+            time += run;
+
+            // While CPU was running, add processes that arrived meanwhile
+            while (next < n && p[next].at <= time) {
+                q.add(next++);
+            }
+
+            // If process finished, record times; otherwise, requeue it
+            if (cur.rt == 0) {
+                cur.ct = time;
+                cur.tat = cur.ct - cur.at;
+                cur.wt = cur.tat - cur.bt;
+                sumTAT += cur.tat;
+                sumWT += cur.wt;
+                finished++;
+            } else {
+                q.add(idx); 
+            }
+        }
+
+        // Print results
+        System.out.println("\nPID\tAT\tBT\tCT\tTAT\tWT");
+        for (Process pr : p) {
+            System.out.printf("P%d\t%d\t%d\t%d\t%d\t%d\n",
+                    pr.id, pr.at, pr.bt, pr.ct, pr.tat, pr.wt);
+        }
+        System.out.printf("\nAverage TAT: %.2f\nAverage WT: %.2f\n", sumTAT / n, sumWT / n);
+
+        sc.close();
+    }
+}
+
+Priority
+import java.util.Scanner;
+
+public class PriorityNonPreemptiveEasy {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Input number of processes
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+
+        int[] bt = new int[n];      // burst times
+        int[] pr = new int[n];      // priorities
+        int[] wt = new int[n];      // waiting times
+        int[] tat = new int[n];     // turnaround times
+        int[] pid = new int[n];     // process IDs
+
+        // Input burst times and priorities
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter burst time for Process " + (i + 1) + ": ");
+            bt[i] = sc.nextInt();
+            System.out.print("Enter priority for Process " + (i + 1) + ": ");
+            pr[i] = sc.nextInt();
+            pid[i] = i + 1; // process IDs (P1, P2, ...)
+        }
+
+        // Sort processes by priority (small number = high priority)
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (pr[i] > pr[j]) {
+                    // swap priority
+                    int temp = pr[i]; pr[i] = pr[j]; pr[j] = temp;
+                    // swap burst time
+                    temp = bt[i]; bt[i] = bt[j]; bt[j] = temp;
+                    // swap process id
+                    temp = pid[i]; pid[i] = pid[j]; pid[j] = temp;
+                }
+            }
+        }
+
+        // Calculate waiting time and turnaround time
+        wt[0] = 0; // first process has 0 waiting time
+        tat[0] = bt[0];
+        for (int i = 1; i < n; i++) {
+            wt[i] = wt[i - 1] + bt[i - 1];
+            tat[i] = wt[i] + bt[i];
+        }
+
+        // Print result
+        System.out.println("\nProcess\tBT\tPriority\tWT\tTAT");
+        int totalWT = 0, totalTAT = 0;
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + pid[i] + "\t" + bt[i] + "\t" + pr[i] + "\t\t" + wt[i] + "\t" + tat[i]);
+            totalWT += wt[i];
+            totalTAT += tat[i];
+        }
+
+        // Print averages
+        System.out.println("\nAverage Waiting Time = " + (float) totalWT / n);
+        System.out.println("Average Turnaround Time = " + (float) totalTAT / n);
+
+        sc.close();
+    }
+}
+
