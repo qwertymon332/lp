@@ -1,0 +1,41 @@
+import java.io.*;
+import java.util.*;
+
+public class SimpleMacroPass1 {
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new FileReader("Input.txt"));
+        PrintWriter mnt = new PrintWriter("mnt.txt");
+        PrintWriter mdt = new PrintWriter("mdt.txt");
+        PrintWriter ala = new PrintWriter("ala.txt");
+
+        String line;
+        int mdtIndex = 0, mntIndex = 0;
+
+        while ((line = br.readLine()) != null) {
+            String[] parts = line.trim().split(" ");
+            if (parts[0].equals("MACRO")) {
+                String macroName = parts[1];
+                mnt.println(macroName + "\t" + mdtIndex);
+                ala.println(macroName);
+
+                String[] args = parts[2].split(",");
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i].startsWith("&")) {
+                        ala.println("AR" + i + " = " + args[i]);
+                    }
+                }
+
+                while (!(line = br.readLine()).equals("MEND")) {
+                    for (int i = 0; i < args.length; i++) {
+                        line = line.replace(args[i], "AR" + i);
+                    }
+                    mdt.println(mdtIndex++ + "\t" + line);
+                }
+                mdt.println(mdtIndex++ + "\tMEND");
+            }
+        }
+        mnt.close();
+        mdt.close();
+        ala.close();
+    }
+}
