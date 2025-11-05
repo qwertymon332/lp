@@ -1,0 +1,132 @@
+import java.util.*;
+
+public class PageReplacementSimulator {
+
+    // --- 1. First-In, First-Out (FIFO) ---
+    // The first page to enter memory is the first to be removed.
+    public static void fifo(List<Integer> referenceString, int frames) {
+        System.out.println("--- FIFO Algorithm ---");
+        // A Queue is perfect for FIFO because it follows the "first-in, first-out" principle.
+        Queue<Integer> memory = new LinkedList<>();
+        int faults = 0;
+
+        for (int page : referenceString) {
+            // If the page is NOT in memory, it's a page fault.
+            if (!memory.contains(page)) {
+                faults++;
+                // If memory is full, remove the oldest page (the one at the front of the queue).
+                if (memory.size() == frames) {
+                    memory.poll(); // .poll() removes the head of the queue.
+                }
+                // Add the new page to the back of the queue.
+                memory.add(page);
+            }
+            // Print the current state
+            System.out.println("Page: " + page + " | Memory: " + memory);
+        }
+        System.out.println("Total FIFO Page Faults: " + faults + "\n");
+    }
+
+    // --- 2. Least Recently Used (LRU) ---
+    // The page that has not been used for the longest time is removed.
+    public static void lru(List<Integer> referenceString, int frames) {
+        System.out.println("--- LRU Algorithm ---");
+        // We use a List to easily manage the order of use.
+        List<Integer> memory = new ArrayList<>();
+        int faults = 0;
+
+        for (int page : referenceString) {
+            // If the page is NOT in memory, it's a page fault.
+            if (!memory.contains(page)) {
+                faults++;
+                // If memory is full, remove the least recently used page (the one at the beginning of the list).
+                if (memory.size() == frames) {
+                    memory.remove(0);
+                }
+            } else {
+                // If the page IS already in memory (a "hit"), we remove it from its current position...
+                memory.remove((Integer) page);
+            }
+            // ...and add it to the end of the list to mark it as the most recently used.
+            memory.add(page);
+
+            // Print the current state
+            System.out.println("Page: " + page + " | Memory: " + memory);
+        }
+        System.out.println("Total LRU Page Faults: " + faults + "\n");
+    }
+
+    // --- 3. Optimal Page Replacement (OPT) ---
+    // The page that will not be used for the longest time in the future is removed.
+    public static void optimal(List<Integer> referenceString, int frames) {
+        System.out.println("--- Optimal Algorithm ---");
+        List<Integer> memory = new ArrayList<>();
+        int faults = 0;
+
+        for (int i = 0; i < referenceString.size(); i++) {
+            int page = referenceString.get(i);
+
+            // If the page is NOT in memory, it's a page fault.
+            if (!memory.contains(page)) {
+                faults++;
+                // If memory is full, we need to find the best page to replace.
+                if (memory.size() == frames) {
+                    int replaceIndex = -1;
+                    int farthest = i; // The index of the page to be replaced.
+
+                    // Look at each page currently in memory.
+                    for (int pageInMemory : memory) {
+                        int nextUse = -1;
+                        // Find the next time this page will be used.
+                        for (int j = i + 1; j < referenceString.size(); j++) {
+                            if (pageInMemory == referenceString.get(j)) {
+                                nextUse = j;
+                                break;
+                            }
+                        }
+
+                        // If the page is never used again, it's the perfect one to replace.
+                        if (nextUse == -1) {
+                            replaceIndex = memory.indexOf(pageInMemory);
+                            break;
+                        }
+
+                        // Otherwise, track which page is used farthest in the future.
+                        if (nextUse > farthest) {
+                            farthest = nextUse;
+                            replaceIndex = memory.indexOf(pageInMemory);
+                        }
+                    }
+                    // If no page is found that is never used again, replace the one used farthest away.
+                    // If replaceIndex is still -1 (e.g., all pages in memory have a future use),
+                    // default to removing the first page.
+                    if (replaceIndex == -1) {
+                         memory.remove(0);
+                    } else {
+                         memory.remove(replaceIndex);
+                    }
+                }
+                // Add the new page to memory.
+                memory.add(page);
+            }
+            // Print the current state
+            System.out.println("Page: " + page + " | Memory: " + memory);
+        }
+        System.out.println("Total Optimal Page Faults: " + faults + "\n");
+    }
+
+    public static void main(String[] args) {
+        // The list of pages requested by the CPU.
+        List<Integer> referenceString = Arrays.asList(7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2);
+        // The number of available memory slots (frames).
+        int frames = 3;
+
+        System.out.println("Reference String: " + referenceString);
+        System.out.println("Number of Frames: " + frames + "\n");
+
+        // Run each algorithm
+        fifo(referenceString, frames);
+        lru(referenceString, frames);
+        optimal(referenceString, frames);
+    }
+}
