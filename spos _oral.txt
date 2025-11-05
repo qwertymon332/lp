@@ -1,0 +1,386 @@
+1) What is the input and output of pass I and pass II of an assembler (and macros)?
+
+Pass I (inputs & outputs)
+
+Input: Source program (assembly code) — which may include labels, instructions, assembler directives, macro calls.
+
+Main tasks / Output:
+
+Construct the symbol table (map labels → addresses).
+
+Determine addresses for instructions/data (location counter) and detect syntax errors.
+
+Output an intermediate file (or intermediate code) that contains machine-independent info (instruction opcodes as names, operand tokens, addresses or placeholders for forward references).
+
+Expand macros if macros are expanded in pass I (some assemblers expand macro before pass I).
+
+Pass II (inputs & outputs)
+
+Input: Intermediate file from Pass I and the symbol table (and macro expansions if not already expanded).
+
+Main tasks / Output:
+
+Generate the final object code / machine code (binary or relocatable object).
+
+Resolve addresses of forward references using the symbol table.
+
+Produce listing file, error/warning report, and object module(s).
+
+Macro processing
+
+Macro expansion can be done as a pre-processing step or integrated into pass I.
+
+Input: Macro definitions and macro calls in source.
+
+Output: Expanded source (macro calls replaced by the macro body with arguments substituted) that then goes to the assembler passes.
+
+2) What is preemptive and non-preemptive scheduling?
+
+Preemptive scheduling
+
+The CPU may be taken away from a running process before it voluntarily gives it up (the scheduler interrupts it).
+
+Used for time-sharing/interactive systems (examples: Round Robin, Preemptive SJF, Priority with preemption).
+
+Pros: Good response time, better for interactive workloads.
+
+Cons: Overhead from context switches; needs careful handling of shared resources/locks.
+
+Non-preemptive scheduling
+
+Once a process starts running, it runs until it blocks (I/O) or finishes; the scheduler cannot forcibly remove it.
+
+Examples: FCFS (First Come First Serve), Non-preemptive SJF, non-preemptive Priority.
+
+Pros: Simpler, no involuntary context switches (less overhead).
+
+Cons: Can lead to poor responsiveness and convoy effect (short jobs wait behind long ones).
+
+3) What are Turnaround time, Response time, Waiting time?
+
+Turnaround Time (TAT) = Completion Time (CT) − Arrival Time (AT).
+
+Total time taken from arrival to finish (includes CPU time + waiting + I/O delays).
+
+Waiting Time (WT) = Turnaround Time − Burst Time (BT) (time spent in ready queue waiting).
+
+Response Time (RT) = Time when process first gets CPU − Arrival Time (important for interactive systems).
+These metrics are used to evaluate scheduling algorithms. Lower is generally better (depending on objective).
+
+4) Which algorithm is best when FCFS, RR, Priority and SJF are compared?
+
+There is no single best algorithm for all situations. Which is best depends on metrics and workload:
+
+FCFS: simple, fair by arrival order; high average waiting time and poor for short jobs (convoy effect).
+
+SJF (non-preemptive or preemptive SRTF): gives minimum average waiting time for a given set of jobs (if exact burst times are known). Good for batch jobs. But it may cause starvation of long jobs and requires knowing/estimating burst times.
+
+Priority: good to give importance to certain processes; may cause starvation of low priority jobs (can be mitigated by aging).
+
+Round-Robin (RR): best for interactive/time-sharing systems because it provides good response time fairness; choice of time quantum is critical (too small → high context-switch overhead; too large → degenerates into FCFS).
+
+Summary rule of thumb:
+
+If you want minimal average waiting time (and you know burst times) → SJF.
+
+If you need fairness and responsiveness → RR.
+
+If you need strict service for important jobs → Priority (with aging).
+
+FCFS is simplest but usually not best for time-sharing.
+
+5) Which algorithm is best when LRU, Optimal and FIFO are compared?
+
+Optimal (OPT): Replaces the page that will not be used for the longest time in the future → minimizes page faults. Best but not implementable in practice because it needs future knowledge.
+
+LRU (Least Recently Used): Good practical policy (approximation of OPT). Replaces page not used for the longest time in the past. Works well in many real workloads.
+
+FIFO: Simple; sometimes okay but can suffer Belady’s anomaly (increasing frames may increase faults).
+
+Practical choice: LRU (or approximations like Clock) — best tradeoff for real systems. OPT is theoretical lower bound.
+
+6) What is Macro and assembler?
+
+Macro: A named sequence of assembly instructions or directives that can be defined with parameters and expanded where called. Macros help reuse code and make source more readable. When a macro call is encountered, it’s replaced by the macro body (with arguments substituted).
+
+Assembler: A program that translates assembly language (mnemonics + operands + directives) into machine code / object code. It performs lexical/syntactic checks, symbol table creation, and code generation (in two passes for many assemblers).
+
+7) Why is the Banker's algorithm required?
+
+Purpose: Banker's algorithm is a deadlock avoidance algorithm for multiple resource types. It checks whether granting a resource request keeps the system in a safe state (i.e., there exists some safe sequence where all processes can finish).
+
+Why needed: To avoid deadlock by refusing resource requests that would lead to unsafe states (potentially deadlock-prone). It’s suited to systems where process maximum resource demands are known in advance.
+
+8) What is deadlock? What are the four necessary conditions for deadlock?
+
+Deadlock: A situation where a set of processes are each waiting for resources held by others, so none can proceed.
+
+Four necessary conditions (Coffman conditions) — all must hold simultaneously for deadlock to occur:
+
+Mutual exclusion: Some resources are nonshareable (only one process can use at a time).
+
+Hold and wait: Processes hold at least one resource and wait to acquire additional resources held by others.
+
+No preemption: Resources cannot be forcibly taken away; they must be released voluntarily.
+
+Circular wait: A circular chain of processes exists where each process waits for a resource held by the next in chain.
+
+To prevent or handle deadlocks you can: prevent a condition, avoid (Banker’s algorithm), detect & recover, or ignore (not recommended).
+
+9) Solve one example of each: FCFS, RR, SJF, Priority scheduling.
+
+We will use the same process set for all examples so you can compare results.
+Processes: P1..P4 with (AT, BT) as:
+
+P1: AT=0, BT=8
+
+P2: AT=1, BT=4
+
+P3: AT=2, BT=9
+
+P4: AT=3, BT=5
+
+I’ll compute CT, TAT, WT, RT for each scheduling policy.
+
+A) FCFS (order by arrival)
+
+Order: P1 → P2 → P3 → P4
+
+P1: start 0, CT=0+8=8. TAT=8−0=8, WT=8−8=0, RT=0−0=0
+
+P2: start 8, CT=8+4=12. TAT=12−1=11, WT=11−4=7, RT=8−1=7
+
+P3: start 12, CT=12+9=21. TAT=21−2=19, WT=19−9=10, RT=12−2=10
+
+P4: start 21, CT=21+5=26. TAT=26−3=23, WT=23−5=18, RT=21−3=18
+
+Averages: Avg TAT = (8+11+19+23)/4 = 15.25
+Avg WT = (0+7+10+18)/4 = 8.75
+
+B) SJF (non-preemptive)
+
+At each scheduling point choose job with smallest BT among arrived ones.
+
+Timeline result (for these AT/BT): P1 (0–8) → P2 (8–12) → P4 (12–17) → P3 (17–26)
+
+P1: CT=8, TAT=8, WT=0, RT=0
+
+P2: CT=12, TAT=11, WT=7, RT=7
+
+P4: CT=17, TAT=14, WT=9, RT=12−3=9 (started at 12)
+
+P3: CT=26, TAT=24, WT=15, RT=17−2=15
+
+Averages: Avg TAT = (8+11+14+24)/4 = 14.25
+Avg WT = (0+7+9+15)/4 = 7.75
+
+Note: SJF gave lower average TAT than FCFS in this example.
+
+C) Round-Robin (quantum = 3)
+
+We simulate with time quantum = 3. Execution slices and completion times:
+
+Summary from simulation:
+
+P1 CT = 23, TAT=23, WT=15, RT=0 (first scheduled at t=0)
+
+P2 CT = 16, TAT=15, WT=11, RT=3 (first run at t=3)
+
+P3 CT = 26, TAT=24, WT=15, RT=6 (first run at t=6)
+
+P4 CT = 21, TAT=18, WT=13, RT=9 (first run at t=9)
+
+Averages: Avg TAT = (23+15+24+18)/4 = 20.0
+Avg WT = (15+11+15+13)/4 = 13.5
+
+RR improves response fairness but increases average turnaround/waiting here (depends on quantum & process mix).
+
+D) Priority scheduling (non-preemptive)
+
+Assign priorities (1 = highest): P1=2, P2=1, P3=4, P4=3. Choose highest priority among arrived processes. With the given ATs, order becomes: P1 → P2 → P4 → P3 (same order as SJF for these numbers).
+
+The results become identical to the SJF example above for the chosen priorities:
+
+P1: CT=8, TAT=8, WT=0, RT=0
+
+P2: CT=12, TAT=11, WT=7, RT=7
+
+P4: CT=17, TAT=14, WT=9, RT=9
+
+P3: CT=26, TAT=24, WT=15, RT=15
+
+Avg TAT = 14.25, Avg WT = 7.75
+
+Note: Priority scheduling behaves as SJF-like if priorities correlate to shortness; but generally priority is chosen by importance, not burst size.
+
+10) Solve one example of each: FIFO, Optimal, and LRU page replacement.
+
+We use this classical reference string (page requests):
+7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 and 3 frames in physical memory. Start empty.
+
+A) FIFO (First-In-First-Out)
+
+Simulating FIFO replacement gives page faults on: 7,0,1,2,3,0,4,2,3,0 → total 10 page faults. (I show frame contents stepwise earlier in reasoning for clarity.)
+
+B) Optimal (theoretical best)
+
+Simulating OPT yields 7 page faults for this reference string and 3 frames (optimal is minimal, but needs future knowledge).
+
+C) LRU (Least Recently Used)
+
+Simulating LRU yields 8 page faults for the same string and 3 frames.
+
+Conclusion: For this example: Optimal (7) < LRU (8) < FIFO (10). This illustrates why Optimal is lower bound and LRU is a good practical choice.
+
+11) What is the difference between pass I and pass II of assemblers?
+
+(Short recap + differences)
+
+Pass I: builds symbol table, determines addresses, produces intermediate code; does not generate final object code. Handles label/address resolution preparation.
+
+Pass II: reads intermediate code + symbol table, resolves addresses & forward references, and generates final object code / machine code.
+Difference: Pass I prepares and collects information; Pass II actually generates machine code using that information.
+
+12) What is the drawback of pass I of assemblers?
+
+Main drawbacks / limitations of Pass I:
+
+It does not produce final object code — you still need Pass II.
+
+Forward references: Pass I cannot resolve the addresses of forward-referenced symbols (it just notes them as placeholders). Those are resolved in Pass II.
+
+Requires an intermediate file and extra storage (symbol table, intermediate representation).
+
+Two-pass approach adds processing overhead (time/IO), though it simplifies handling of forward references.
+
+(There exist single-pass assemblers that trade off other constraints, but simple two-pass designers often use Pass I/II.)
+
+13) What is the difference between compilers and interpreters?
+
+Compiler: Translates the entire source program into machine code (object code/executable) before execution. After compilation, the program can run many times without recompiling. Errors are reported after analysis; performance tends to be faster at runtime. Examples: C, C++.
+
+Interpreter: Translates and executes the program line-by-line (or statement-by-statement) at runtime. No separate compiled binary is produced (though many interpreters JIT-compile nowadays). Easier for debugging and portability but usually slower. Examples: Python (traditional interpreter), Ruby (classic).
+
+Other differences: error detection timing, portability, memory footprint, optimization opportunities.
+
+14) Into which different parts is assembly language divided?
+
+Typical divisions (sections) of an assembly program:
+
+Header / directives: Assembler directives (.data, .text, .org, .equ, .globl, etc.).
+
+Data segment: Static data declarations, constants, initialized data (labels for variables).
+
+Code segment (text): Actual instructions with labels and mnemonics.
+
+BSS / uninitialized data: space reserved but not initialized.
+
+Macros / include area: macro definitions or included files.
+
+Stack / runtime structures (conceptually handled at link/load/run time).
+
+Different assemblers use different directive names, but generally there's separation of data and code.
+
+15) What is a process? What are the different states of processes?
+
+Process: An instance of a program in execution — contains program code, current activity (PC, registers), stack, data section, open files, and process control block (PCB).
+
+Typical process states:
+
+New: being created.
+
+Ready: waiting to be assigned to CPU (all resources ready).
+
+Running: currently executing on CPU.
+
+Blocked / Waiting: waiting for some event (I/O, semaphore, resource).
+
+Terminated / Exit: finished execution.
+
+Some systems include suspended or ready-suspended / blocked-suspended states (when swapped out of memory).
+
+State transitions: new → ready → running → waiting → ready → running → terminated.
+
+16) What is paging?
+
+Paging is a memory-management scheme that eliminates external fragmentation and maps logical memory to physical memory in fixed-size blocks.
+
+Logical address space is divided into pages (fixed size, e.g., 4 KB). Physical memory is divided into frames of the same size.
+
+The OS keeps a page table for each process, mapping page numbers to frame numbers (or marking page as not in memory).
+
+On memory access, logical (page, offset) → physical frame*page_size + offset via the page table.
+
+Supports demand paging (bring page into memory on first access). Pages reduce external fragmentation and facilitate virtual memory.
+
+17) What is segmentation?
+
+Segmentation divides the program into logical variable-length segments like code, data, stack, or user-defined segments (each segment corresponds to a logical unit).
+
+Each segment has a base (starting physical address) and limit (length).
+
+Logical address is (segment-number, offset). The hardware uses a segment table mapping segment number → base & limit, then checks offset < limit and forms physical address base + offset.
+
+Pros: Supports logical protection and sharing; segments map to programmer’s view.
+
+Cons: Can cause external fragmentation because segments are variable-sized.
+
+18) What are pages and frames?
+
+Pages: Fixed-size contiguous block of logical (virtual) memory. Size chosen by system (e.g., 4 KB). A process’s virtual address space is split into pages.
+
+Frames: Fixed-size blocks of physical memory of the same size as pages. Physical memory is divided into frames.
+
+Pages are loaded into frames; page table maps page number → frame number (or not present). Because sizes match, translation uses frame_number * page_size + offset.
+
+19) Why is there need of CPU scheduling algorithms?
+
+CPU scheduling algorithms are needed because:
+
+Single CPU, multiple processes: The OS must decide which ready process gets CPU.
+
+To maximize CPU utilization (keep CPU busy), maximize throughput (jobs completed per time), minimize turnaround/waiting/response times, ensure fairness and enforce priorities/guarantees.
+
+Scheduling policies affect system performance, responsiveness, and fairness for interactive vs batch workloads.
+
+20) What are different types of scheduling?
+
+By time-scale and function:
+
+Long-term (job) scheduler: Decides which jobs/processes are admitted to the system (mix of CPU-bound vs I/O-bound). Controls degree of multiprogramming.
+
+Medium-term scheduler: Performs swapping — temporarily removes processes from memory (suspends) and later reintroduces them to improve memory utilization or balance load.
+
+Short-term (CPU) scheduler / dispatcher: Chooses which ready process runs next on CPU (this happens frequently, on every context switch).
+
+By preemption/strategy:
+
+Preemptive vs non-preemptive
+
+FCFS, SJF (non-preemptive)/SRTF (preemptive SJF), Priority (preemptive/non), RR, Multilevel Queue, Multilevel Feedback Queue, Fair-share scheduling, etc.
+
+21) Explain long-term, medium-term and short-term schedulers.
+
+Long-term scheduler (admission/job scheduler):
+
+Frequency: infrequent.
+
+Job: Decides which processes are allowed into the system (i.e., moved from job pool to ready queue). Controls degree of multiprogramming.
+
+Objective: Maintain good mix of I/O-bound and CPU-bound jobs.
+
+Medium-term scheduler (swapper, suspend/resume):
+
+Frequency: occasional.
+
+Job: Temporarily removes processes from main memory (to secondary storage) and later resumes them. Used when memory is constrained.
+
+Objective: Improve process mix in memory and reduce thrashing.
+
+Short-term scheduler (CPU scheduler / dispatcher):
+
+Frequency: very frequent (every few milliseconds — on context switches).
+
+Job: Selects a ready process to execute next on the CPU. Implements the chosen scheduling policy (FCFS, RR, SRTF, etc.).
+
+Objective: Minimize response time, maximize CPU utilization, meet policy requirements.
