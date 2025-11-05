@@ -1,0 +1,145 @@
+import java.util.*;
+import java.io.*;
+
+public class pass1 {
+    static int address = 0;
+    static ArrayList<Integer> sadd = new ArrayList<>();
+    static ArrayList<Integer> ladd = new ArrayList<>();
+    
+    public static void main(String args[]) {
+        String input = null;
+        String IS[] = {"ADD", "SUB", "MUL", "MOV"};
+        String UserReg[] = {"AREG", "BREG", "CREG", "DREG"};
+        String AD[] = {"START", "END"};
+        String DL[] = {"DC", "DS"};
+        int lc = 0;
+        int scount = 0, lcount = 0;
+        int flag = 0;
+        String tokens[] = new String[30];
+        String tt = null;
+        ArrayList<String> sv = new ArrayList<>();
+        ArrayList<String> lv = new ArrayList<>();
+        
+        try (
+            BufferedReader br = new BufferedReader(new FileReader("initial.txt"));
+            PrintWriter p = new PrintWriter(new File("IM.txt"));
+            PrintWriter p1 = new PrintWriter(new File("ST.txt"));
+            PrintWriter p2 = new PrintWriter(new File("LT.txt"))
+        ) {
+            while ((input = br.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(input, " ");
+                flag = 0; // Reset flag for each line
+                
+                while (st.hasMoreTokens()) {
+                    tt = st.nextToken();
+                    
+                    // Check if it's a starting address (numeric with length > 2)
+                    if (tt.matches("\\d+") && tt.length() > 2) {
+                        lc = Integer.parseInt(tt);
+                        p.println(lc);
+                        address = lc - 1;
+                    } else {
+                        // Check for Assembler Directives
+                        for (int i = 0; i < AD.length; i++) {
+                            if (tt.equals(AD[i])) {
+                                p.print("AD " + (i + 1) + " ");
+                            }
+                        }
+                        
+                        // Check for Instruction Set
+                        for (int i = 0; i < IS.length; i++) {
+                            if (tt.equals(IS[i])) {
+                                p.print("IS " + (i + 1) + " ");
+                            }
+                        }
+                        
+                        // Check for User Registers
+                        for (int i = 0; i < UserReg.length; i++) {
+                            if (tt.equals(UserReg[i])) {
+                                p.print((i + 1) + " ");
+                                flag = 1;
+                            }
+                        }
+                        
+                        // Check for Declarative statements
+                        for (int i = 0; i < DL.length; i++) {
+                            if (tt.equals(DL[i])) {
+                                p.print("DL " + (i + 1) + " ");
+                            }
+                        }
+                        
+                        // Handle single character symbols at end of line
+                        if (tt.length() == 1 && !(st.hasMoreTokens()) && flag == 1) {
+                            int index = sv.indexOf(tt);
+                            if (index != -1) {
+                                p.print("S" + index);
+                            } else {
+                                p.print("S" + scount);
+                                sv.add(tt);
+                                scount++;
+                            }
+                        }
+                        
+                        // Handle single character symbols (labels) at start
+                        if (tt.length() == 1 && st.hasMoreTokens()) {
+                            p.print(tt + " ");
+                            sadd.add(address);
+                        }
+                        
+                        // Handle literals
+                        if (tt.length() > 0 && tt.charAt(0) == '=') {
+                            p.print("L" + lcount);
+                            lv.add(tt);
+                            lcount++;
+                        }
+                        
+                        // Handle DS (Data Storage) directive
+                        if (tt.equals("DS")) {
+                            if (st.hasMoreTokens()) {
+                                int a = Integer.parseInt(st.nextToken());
+                                address = address + a - 1;
+                            }
+                            p.println();
+                        }
+                    }
+                }
+                
+                if (!tt.equals("DS")) {
+                    p.println();
+                }
+                address++;
+            }
+            
+            address--;
+            
+            // Assign addresses to literals
+            for (int i = 0; i < lcount; i++) {
+                ladd.add(address);
+                address++;
+            }
+            
+            // Write Symbol Table
+            for (int i = 0; i < scount; i++) {
+                p1.println(i + "\t" + sv.get(i) + "\t" + sadd.get(i));
+            }
+            
+            // Write Literal Table
+            for (int i = 0; i < lcount; i++) {
+                p2.println(i + "\t" + lv.get(i) + "\t" + ladd.get(i));
+            }
+            
+        } catch (FileNotFoundException e) {
+            System.err.println("Error: initial.txt file not found.");
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error: Problem reading/writing files.");
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            System.err.println("Error: Invalid number format in input.");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Unexpected error occurred.");
+            e.printStackTrace();
+        }
+    }
+}
